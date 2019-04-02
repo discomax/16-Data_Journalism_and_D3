@@ -1,9 +1,7 @@
-// @TODO: YOUR CODE HERE!
+// Data Journalism and D3
+// Mike Patterson - 2019
 
-// When the browser loads, loadChart() is called
-//loadChart();
-
-// Define theh SVG area dimensions
+//Define the SVG area dimensions
 var svgWidth = window.innerWidth;
 var svgHeight = window.innerHeight;
 
@@ -32,13 +30,13 @@ var chartGroup = svg.append("g")
     .attr("transform", `translate(${chartMarg.left}, ${chartMarg.top})`);
 
 // Append a div to the body to create tooltips, assign it a class
-var div = d3.select(".scatter").append("div").attr("class", "tooltip").style("opacity", 0);
+var toolTip = d3.select("#scatter").append("div").attr("class", "tooltip").style("opacity", 0);
 
 // Load data from data.csv
-d3.csv("assets/data/data.csv", function(error, censusData) {
-    if (error) return console.warn(error);
+d3.csv("./assets/data/data.csv", function(censusData) {
 
-    console.log(censusData);
+    // if (censusData) return console.log(censusData);
+    console.log('censusData: ', censusData);
 
     // Cast the desired values to a number for each piece requring it
     censusData.forEach(function(data) {
@@ -50,26 +48,43 @@ d3.csv("assets/data/data.csv", function(error, censusData) {
         data.state = data.state;
     });
 
-    // Create code to build the scater plot using censusData
+    // Scale functions
+    var xScale = d3.scaleLinear().range([0, chartWidth]);
+    var yScale = d3.scaleLinear().range([chartHeight, 0]);
+
+    //Axis functions using the escales
+    var bottomAxis = d3.axisBottom(xScale);
+    var leftAxis = d3.axisLeft(yScale);
+
+    // Max and min vaues of axis
+    var xMax = d3.max(censusData, d => d.poverty);
+    var xMin = d3.min(censusData, d => d.poverty);
+    var yMax = d3.max(censusData, d => d.smokes);
+    var yMin = d3.min(censusData, d => d.smokes);
+    console.log(xMin);
     
-    chartGroup.selectAll("#scatter")
+    // Domains for x and y axis
+    xScale.domain([xMin - 2, xMax]);
+    yScale.domain([0, yMax + 1]);
+
+    // Create code to build the scater plot using censusData
+    chartGroup.selectAll(".stateCircle")
         .data(censusData)
         .enter()
         .append("circle")
-        .classed("circle", true)
-        .attr("cx", d => d.poverty)
-        .attr("cy", d => d.smokes)
-        .attr("r", d => d.income / 1000)
-        
+        .attr("class", "stateCircle")
+        .attr("cx", d => xScale(d.poverty))
+        .attr("cy", d => yScale(d.smokes))
+        .attr("r", d => d.income / 3200);
 
-    chartGroup.selectAll("text")
+
+    chartGroup.selectAll(".stateText")
         .data(censusData)
         .enter()
         .append("text")
-        .text(d => d.abbr);
-
-    
-        
-
+        .attr("class", ".stateText")
+        .text(d => d.abbr)
+        .attr("x", d => xScale(d.poverty - .1))
+        .attr("y", d => yScale(d.smokes))
+        .attr("font-size", d => d.income / 4000);
 });
-
